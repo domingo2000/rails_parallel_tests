@@ -57,8 +57,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        group: [1, 2]
-    name: Test Group ${{ matrix.group }}/2
+        group: [1, 2, 3, 4]
+    name: Test Group ${{ matrix.group }}/4
     steps:
       - uses: actions/checkout@v4
       - uses: ruby/setup-ruby@v1
@@ -81,7 +81,7 @@ jobs:
       # Run tests
       - name: Run Tests
         run: |
-          bundle exec parallel_test -n 2 --group-by runtime --only-group ${{ matrix.group }} --verbose test/
+          bundle exec parallel_test -n 4 --group-by runtime --only-group ${{ matrix.group }} --verbose test/
         env:
           RAILS_ENV: test
           RECORD_RUNTIME: "true"
@@ -118,6 +118,18 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           key: runtime-cache-2
+          path: tmp/parallel_runtime_test
+      
+      - name: Load Runtime Cache Chunk 3
+        uses: actions/cache/restore@v4
+        with:
+          key: runtime-cache-3
+          path: tmp/parallel_runtime_test
+
+      - name: Load Runtime Cache Chunk 4
+        uses: actions/cache/restore@v4
+        with:
+          key: runtime-cache-4
           path: tmp/parallel_runtime_test
           
       - name: Combine Runtime Cache Chunks
