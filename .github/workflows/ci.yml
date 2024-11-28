@@ -96,7 +96,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-${{ matrix.group }}
-          path: coverage
+          path: ./coverage/
           
       # Clear and store runtime chunk
       - name: Clear Runtime Cache Chunk
@@ -166,13 +166,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: coverage-1
-          path: coverage/resultset-1
+          path: ./coverage/resultset-1/
           
       - name: Download Coverage Group 2
         uses: actions/download-artifact@v4
         with:
           name: coverage-2
-          path: coverage/resultset-2
+          path: ./coverage/resultset-2/
           
       # Generate combined coverage report
       - name: Generate Combined Coverage Report
