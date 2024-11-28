@@ -86,6 +86,11 @@ jobs:
           RAILS_ENV: test
           RECORD_RUNTIME: true
 
+      # List directories for debugging
+      - name: List Directories
+        run: |
+          ls -la
+
       # Upload coverage data
       - name: Upload Coverage Data
         uses: actions/upload-artifact@v4
