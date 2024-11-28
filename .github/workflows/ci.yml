@@ -81,7 +81,7 @@ jobs:
       # Run tests
       - name: Run Tests
         run: |
-          bundle exec parallel_test -n 2 --group-by runtime --only-group ${{ matrix.group }} --verbose test/
+          bundle exec parallel_test -n 2 --only-group ${{ matrix.group }} --verbose test/
         env:
           RAILS_ENV: test
           RECORD_RUNTIME: "true"
