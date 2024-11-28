@@ -55,36 +55,87 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
-
-    # services:
-    #  redis:
-    #    image: redis
-    #    ports:
-    #      - 6379:6379
-    #    options: --health-cmd "redis-cli ping" --health-interval 10s --health-timeout 5s --health-retries 5
+    strategy:
+      matrix:
+        group: [1, 2]
+    name: Test Group ${{ matrix.group }}/2
     steps:
-      - name: Install packages
-        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y google-chrome-stable curl libjemalloc2 libvips sqlite3
-
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: .ruby-version
           bundler-cache: true
-
-      - name: Run tests
+      
+      # Setup test database
+      - name: Setup test database
+        run: |
+          bundle exec rake parallel:setup
+      
+      # Restore runtime cache
+      - name: Restore Runtime Cache
+        uses: actions/cache/restore@v4
+        id: cache-restore
+        with:
+          key: runtime-cache-all
+          path: tmp/parallel_runtime_test.log
+          
+      # Run tests
+      - name: Run Tests
+        run: |
+          bundle exec parallel_test -n 2 --group-by runtime --only-group ${{ matrix.group }} --verbose test/
         env:
           RAILS_ENV: test
-          # REDIS_URL: redis://localhost:6379/0
-        run: bin/rails db:test:prepare test test:system
-
-      - name: Keep screenshots from failed system tests
-        uses: actions/upload-artifact@v4
-        if: failure()
+          RECORD_RUNTIME: "true"
+          
+      # Clear and store runtime chunk
+      - name: Clear Runtime Cache Chunk
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh extension install actions/gh-actions-cache
+          gh actions-cache delete runtime-cache-${{ matrix.group }} --confirm || true
+          mkdir -p tmp/parallel_runtime_test
+          mv tmp/parallel_runtime_test.log tmp/parallel_runtime_test/${{ matrix.group }}.log
+        continue-on-error: true
+        
+      - name: Store Runtime Cache Chunk
+        uses: actions/cache/save@v4
         with:
-          name: screenshots
-          path: ${{ github.workspace }}/tmp/screenshots
-          if-no-files-found: ignore
+          key: runtime-cache-${{ matrix.group }}
+          path: tmp/parallel_runtime_test
+
+  store-runtime:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Load Runtime Cache Chunk 1
+        uses: actions/cache/restore@v4
+        with:
+          key: runtime-cache-1
+          path: tmp/parallel_runtime_test
+          
+      - name: Load Runtime Cache Chunk 2
+        uses: actions/cache/restore@v4
+        with:
+          key: runtime-cache-2
+          path: tmp/parallel_runtime_test
+          
+      - name: Combine Runtime Cache Chunks
+        run: |
+          mkdir -p tmp
+          cat tmp/parallel_runtime_test/* > tmp/parallel_runtime_test.log
+          cat tmp/parallel_runtime_test.log
+          
+      - name: Clear Runtime Cache
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh extension install actions/gh-actions-cache
+          gh actions-cache delete runtime-cache-all --confirm || true
+        continue-on-error: true
+        
+      - name: Store Combined Runtime Cache
+        uses: actions/cache/save@v4
+        with:
+          key: runtime-cache-all
+          path: tmp/parallel_runtime_test.log
