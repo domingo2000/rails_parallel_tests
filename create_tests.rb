@@ -9,6 +9,7 @@ def create_test_file(number)
 
     class LoadTest#{number} < ActiveSupport::TestCase
       test "dummy test #{number}" do
+        sleep(1)
         assert_equal 2, 1 + 1
       end
     end

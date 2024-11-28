@@ -3,6 +3,7 @@ require "active_support/test_case"
 
 class LoadTest24 < ActiveSupport::TestCase
   test "dummy test 24" do
+    sleep(1)
     assert_equal 2, 1 + 1
   end
 end
