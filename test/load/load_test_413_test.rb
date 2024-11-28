@@ -1,5 +1,5 @@
-require 'test_helper'
-require 'active_support/test_case'
+require "test_helper"
+require "active_support/test_case"
 
 class LoadTest413 < ActiveSupport::TestCase
   test "dummy test 413" do
