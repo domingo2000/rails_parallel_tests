@@ -85,6 +85,13 @@ jobs:
         env:
           RAILS_ENV: test
           RECORD_RUNTIME: "true"
+
+      # Upload coverage data
+      - name: Upload Coverage Data
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.group }}
+          path: coverage
           
       # Clear and store runtime chunk
       - name: Clear Runtime Cache Chunk
@@ -139,3 +146,36 @@ jobs:
         with:
           key: runtime-cache-all
           path: tmp/parallel_runtime_test.log
+  
+  store-coverage:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+          
+      # Download coverage artifacts from each test group
+      - name: Download Coverage Group 1
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-1
+          path: coverage/resultset-1
+          
+      - name: Download Coverage Group 2
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-2
+          path: coverage/resultset-2
+          
+      # Generate combined coverage report
+      - name: Generate Combined Coverage Report
+        run: bundle exec rake coverage:report
+        
+      # Upload combined coverage report
+      - name: Upload Combined Coverage Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage
