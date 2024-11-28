@@ -89,7 +89,7 @@ jobs:
       # List directories for debugging
       - name: List Directories
         run: |
-          ls -la
+          ls -la coverage
 
       # Upload coverage data
       - name: Upload Coverage Data
