@@ -57,8 +57,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        group: [1, 2, 3, 4]
-    name: Test Group ${{ matrix.group }}/4
+        group: [1, 2]
+    name: Test Group ${{ matrix.group }}/2
     steps:
       - uses: actions/checkout@v4
       - uses: ruby/setup-ruby@v1
@@ -81,10 +81,22 @@ jobs:
       # Run tests
       - name: Run Tests
         run: |
-          bundle exec parallel_test -n 4 --group-by runtime --only-group ${{ matrix.group }} --verbose test/
+          bundle exec parallel_test -n 2 --only-group ${{ matrix.group }} --verbose test/
         env:
           RAILS_ENV: test
-          RECORD_RUNTIME: "true"
+          RECORD_RUNTIME: true
+
+      # List directories for debugging
+      - name: List Directories
+        run: |
+          ls -la coverage
+
+      # Upload coverage data
+      - name: Upload Coverage Data
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.group }}
+          path: ./coverage/
           
       # Clear and store runtime chunk
       - name: Clear Runtime Cache Chunk
@@ -120,18 +132,6 @@ jobs:
           key: runtime-cache-2
           path: tmp/parallel_runtime_test
       
-      - name: Load Runtime Cache Chunk 3
-        uses: actions/cache/restore@v4
-        with:
-          key: runtime-cache-3
-          path: tmp/parallel_runtime_test
-
-      - name: Load Runtime Cache Chunk 4
-        uses: actions/cache/restore@v4
-        with:
-          key: runtime-cache-4
-          path: tmp/parallel_runtime_test
-          
       - name: Combine Runtime Cache Chunks
         run: |
           mkdir -p tmp
@@ -151,3 +151,36 @@ jobs:
         with:
           key: runtime-cache-all
           path: tmp/parallel_runtime_test.log
+  
+  store-coverage:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+          
+      # Download coverage artifacts from each test group
+      - name: Download Coverage Group 1
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-1
+          path: ./coverage/resultset-1/
+          
+      - name: Download Coverage Group 2
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-2
+          path: ./coverage/resultset-2/
+          
+      # Generate combined coverage report
+      - name: Generate Combined Coverage Report
+        run: bundle exec rake coverage:report
+        
+      # Upload combined coverage report
+      - name: Upload Combined Coverage Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage

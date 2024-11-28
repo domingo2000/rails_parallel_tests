@@ -53,6 +53,9 @@ group :development, :test do
 
   # For parallel testing in different CI nodes
   gem "parallel_tests"
+
+  # For coverage
+  gem "simplecov", require: false
 end
 
 group :development do
