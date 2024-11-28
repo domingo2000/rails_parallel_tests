@@ -84,7 +84,7 @@ jobs:
           bundle exec parallel_test -n 2 --only-group ${{ matrix.group }} --verbose test/
         env:
           RAILS_ENV: test
-          RECORD_RUNTIME: "true"
+          RECORD_RUNTIME: true
 
       # Upload coverage data
       - name: Upload Coverage Data
