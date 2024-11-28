@@ -4,11 +4,12 @@ require 'fileutils'
 
 def create_test_file(number)
   content = <<~RUBY
-    require 'test_helper'
-    require 'active_support/test_case'
+    require "test_helper"
+    require "active_support/test_case"
 
     class LoadTest#{number} < ActiveSupport::TestCase
       test "dummy test #{number}" do
+        sleep(1)
         assert_equal 2, 1 + 1
       end
     end
